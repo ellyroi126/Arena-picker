@@ -15,6 +15,7 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
   const [fighters, setFighters] = useState([])
   const [battleLog, setBattleLog] = useState([])
   const [isAnimating, setIsAnimating] = useState(null) // Store fighter ID being attacked
+  const [attackingFighter, setAttackingFighter] = useState(null) // Fighter lunging forward
   const [bracket, setBracket] = useState([])
   const [currentMatchInfo, setCurrentMatchInfo] = useState(null)
   const [damageNumbers, setDamageNumbers] = useState([])
@@ -215,9 +216,13 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
       setTimeout(() => setScreenShake(false), 300)
     }
 
-    // Apply damage with animation
+    // Trigger attack lunge animation
+    setAttackingFighter(attacker.id)
+    setTimeout(() => setAttackingFighter(null), 400)
+
+    // Apply damage with knockback animation
     setIsAnimating(defender.id)
-    setTimeout(() => setIsAnimating(null), 300)
+    setTimeout(() => setIsAnimating(null), 500)
 
     // Update fighters
     const newFighters = fighters.map(f => {
@@ -344,7 +349,10 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                 <div
                   key={fighter.id}
                   ref={el => fighterRefs.current[fighter.id] = el}
-                  className={`ffa-fighter ${!fighter.isAlive ? 'eliminated' : ''} ${isAnimating === fighter.id ? 'attacked' : ''}`}
+                  className={`ffa-fighter
+                    ${!fighter.isAlive ? 'eliminated' : ''}
+                    ${isAnimating === fighter.id ? 'hit-reaction' : ''}
+                    ${attackingFighter === fighter.id ? 'attacking' : ''}`}
                 >
                   <div
                     className="ffa-avatar"
@@ -377,12 +385,20 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
             </div>
           </div>
         ) : (
-          // Tournament mode - Traditional 1v1 display
-          <div className="battle-stage">
+          // Tournament mode - Side-scrolling fighter layout
+          <div className="battle-stage platformer-arena">
+            {/* Arena background layers */}
+            <div className="arena-bg-layer far-bg"></div>
+            <div className="arena-bg-layer mid-bg"></div>
+            <div className="arena-floor"></div>
+
+            {/* Fighter 1 - Left side */}
             {fighters[0] && (
               <div
                 ref={el => fighterRefs.current[fighters[0].id] = el}
-                className={`fighter fighter-left ${isAnimating === fighters[0].id ? 'attacked' : ''}`}
+                className={`fighter fighter-left
+                  ${isAnimating === fighters[0].id ? 'hit-reaction' : ''}
+                  ${attackingFighter === fighters[0].id ? 'attacking' : ''}`}
               >
                 <div
                   className="fighter-avatar"
@@ -414,10 +430,13 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
 
             <div className="vs-text">VS</div>
 
+            {/* Fighter 2 - Right side */}
             {fighters[1] && (
               <div
                 ref={el => fighterRefs.current[fighters[1].id] = el}
-                className={`fighter fighter-right ${isAnimating === fighters[1].id ? 'attacked' : ''}`}
+                className={`fighter fighter-right
+                  ${isAnimating === fighters[1].id ? 'hit-reaction' : ''}
+                  ${attackingFighter === fighters[1].id ? 'attacking' : ''}`}
               >
                 <div
                   className="fighter-avatar"

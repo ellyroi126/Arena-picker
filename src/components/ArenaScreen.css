@@ -61,11 +61,78 @@
   margin-bottom: 24px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   gap: 20px;
-  min-height: 300px;
+  min-height: 400px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
   position: relative;
+  overflow: hidden;
+}
+
+/* Platformer Arena Styling */
+.platformer-arena {
+  background: linear-gradient(180deg, #1a2332 0%, #2a3545 100%);
+  padding: 60px 40px 40px;
+  min-height: 500px;
+}
+
+/* Background Layers for Depth */
+.arena-bg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.far-bg {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255, 200, 100, 0.1) 0%, transparent 30%),
+    linear-gradient(180deg, rgba(26, 35, 50, 0.8) 0%, transparent 100%);
+  z-index: 0;
+}
+
+.mid-bg {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 150px,
+      rgba(255, 255, 255, 0.02) 150px,
+      rgba(255, 255, 255, 0.02) 152px
+    );
+  z-index: 1;
+}
+
+/* Arena Floor/Platform */
+.arena-floor {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(180deg, var(--border-color) 0%, var(--bg-dark) 100%);
+  border-top: 3px solid var(--accent-primary);
+  box-shadow: 0 -4px 20px rgba(233, 69, 96, 0.3);
+  z-index: 2;
+}
+
+.arena-floor::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent-primary) 0px,
+    var(--accent-primary) 20px,
+    transparent 20px,
+    transparent 40px
+  );
+  opacity: 0.5;
 }
 
 /* Battle stage floor effect */
@@ -87,23 +154,100 @@
 }
 
 .fighter {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  transition: all 0.3s;
-  z-index: 1;
+  transition: transform 0.2s ease-out;
+  z-index: 10;
+  position: relative;
 }
 
-.fighter.attacked {
-  animation: shake 0.3s, flash-damage 0.3s;
+/* Platformer positioning */
+.platformer-arena .fighter {
+  position: absolute;
+  bottom: 52px;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  75% { transform: translateX(8px); }
+.platformer-arena .fighter-left {
+  left: 15%;
+}
+
+.platformer-arena .fighter-right {
+  right: 15%;
+}
+
+/* Attack Lunge Animation */
+.fighter.attacking {
+  animation: lunge-forward 0.4s ease-out;
+}
+
+@keyframes lunge-forward {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(60px) scale(1.1);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.fighter-right.attacking {
+  animation: lunge-backward 0.4s ease-out;
+}
+
+@keyframes lunge-backward {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(-60px) scale(1.1);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Hit Reaction/Knockback */
+.fighter.hit-reaction {
+  animation: knockback 0.5s ease-out, flash-damage 0.3s;
+}
+
+@keyframes knockback {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  30% {
+    transform: translateX(-40px) translateY(-10px);
+  }
+  60% {
+    transform: translateX(-40px) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.fighter-right.hit-reaction {
+  animation: knockback-right 0.5s ease-out, flash-damage 0.3s;
+}
+
+@keyframes knockback-right {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  30% {
+    transform: translateX(40px) translateY(-10px);
+  }
+  60% {
+    transform: translateX(40px) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
 }
 
 @keyframes flash-damage {
@@ -229,7 +373,17 @@
   color: var(--accent-primary);
   text-shadow: 4px 4px 0 var(--border-color);
   animation: pulse-vs 1.5s ease-in-out infinite;
-  z-index: 2;
+  z-index: 5;
+  position: relative;
+}
+
+/* In platformer mode, position VS in center */
+.platformer-arena .vs-text {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: pulse-vs-platformer 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse-vs {
@@ -239,6 +393,17 @@
   }
   50% {
     transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-vs-platformer {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
     opacity: 0.8;
   }
 }
@@ -361,13 +526,47 @@
   position: relative;
 }
 
+/* Add platform shadow effect */
+.ffa-fighter::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 6px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
+  z-index: -1;
+}
+
 .ffa-fighter:not(.eliminated):hover {
   border-color: var(--accent-primary);
   transform: translateY(-4px);
 }
 
-.ffa-fighter.attacked {
+.ffa-fighter:not(.eliminated):hover::after {
+  bottom: -12px;
+  opacity: 0.6;
+}
+
+.ffa-fighter.hit-reaction {
   animation: shake-ffa 0.3s, flash-red 0.3s;
+}
+
+.ffa-fighter.attacking {
+  animation: punch-out 0.4s ease-out;
+}
+
+@keyframes punch-out {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-8px) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes shake-ffa {
