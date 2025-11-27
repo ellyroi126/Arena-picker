@@ -1,6 +1,6 @@
-# 🎮 Arena Picker - Battle Royale Decision Maker
+# 🎮 Arena Picker - Platformer Battle Royale Decision Maker
 
-A fun, pixel-art styled web application where your choices battle it out in a gladiator arena! Perfect for deciding on restaurants, movies, games, or anything else.
+A fun, pixel-art styled web application where your choices battle it out in a **side-scrolling fighting game arena**! Perfect for deciding on restaurants, movies, games, or anything else. Watch them **dash, lunge, and get knocked back** in an action-packed platformer arena!
 
 ## ✨ Features
 
@@ -14,6 +14,13 @@ A fun, pixel-art styled web application where your choices battle it out in a gl
   - 🎭 **Idle animations** - fighters bob and pulse while waiting
   - 🔥 **Hit flash effects** when damage is dealt
   - 🎯 **Attack type system** - melee, magic, ranged, and heavy attacks
+- 🎮 **Platformer-Style Arena** - Side-scrolling fighting game layout!
+  - **Dash forward animations** when attacking (60px lunge)
+  - **Knockback animations** when hit (fly back with air time)
+  - **Arena floor** with glowing platform effect
+  - **Background layers** for depth and atmosphere
+  - **Proper positioning** - fighters on opposite sides like Street Fighter
+  - **Dynamic movement** - watch them move during combat!
 - 🎨 **Pixel Art Styling** - Retro gaming aesthetic with crisp pixel graphics
 - 🔥 **Free For All Mode** - All contestants battle at once, last one standing wins!
   - Grid display showing all fighters simultaneously
