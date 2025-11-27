@@ -9,9 +9,27 @@
   background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-medium) 100%);
 }
 
+/* Screen shake effect on heavy hits */
+.arena-screen.screen-shake {
+  animation: screen-shake 0.3s;
+}
+
+@keyframes screen-shake {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translate(-5px, 5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translate(5px, -5px);
+  }
+}
+
 .arena-container {
   max-width: 1000px;
   width: 100%;
+  position: relative;
 }
 
 .arena-header {
@@ -79,13 +97,22 @@
 }
 
 .fighter.attacked {
-  animation: shake 0.3s;
+  animation: shake 0.3s, flash-damage 0.3s;
 }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-8px); }
   75% { transform: translateX(8px); }
+}
+
+@keyframes flash-damage {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.8) saturate(1.5);
+  }
 }
 
 .fighter-left {
@@ -108,8 +135,19 @@
   color: white;
   text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
   box-shadow: 4px 4px 0 var(--border-color);
-  animation: float 3s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite, pulse-ready 2s ease-in-out infinite;
   overflow: hidden;
+}
+
+@keyframes pulse-ready {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
 }
 
 .fighter-avatar img {
@@ -329,13 +367,23 @@
 }
 
 .ffa-fighter.attacked {
-  animation: shake-ffa 0.3s;
+  animation: shake-ffa 0.3s, flash-red 0.3s;
 }
 
 @keyframes shake-ffa {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
+}
+
+@keyframes flash-red {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.5) hue-rotate(10deg);
+    box-shadow: 0 0 20px var(--hp-red);
+  }
 }
 
 .ffa-fighter.eliminated {
@@ -362,7 +410,22 @@
   box-shadow: 3px 3px 0 var(--border-color);
   overflow: hidden;
   position: relative;
-  animation: float 3s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite, idle-bob 2s ease-in-out infinite;
+}
+
+@keyframes idle-bob {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(2deg);
+  }
 }
 
 .ffa-avatar img {

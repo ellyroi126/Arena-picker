@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import './ArenaScreen.css'
 import TournamentBracket from './TournamentBracket'
+import DamageNumber from './DamageNumber'
+import AttackEffect from './AttackEffect'
 import {
   createTournamentBracket,
   getNextMatch,
@@ -15,7 +17,12 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
   const [isAnimating, setIsAnimating] = useState(null) // Store fighter ID being attacked
   const [bracket, setBracket] = useState([])
   const [currentMatchInfo, setCurrentMatchInfo] = useState(null)
+  const [damageNumbers, setDamageNumbers] = useState([])
+  const [attackEffects, setAttackEffects] = useState([])
+  const [screenShake, setScreenShake] = useState(false)
   const battleLogRef = useRef(null)
+  const arenaRef = useRef(null)
+  const fighterRefs = useRef({})
 
   const isTournamentMode = settings.mode === 'tournament'
   const isFreeForAllMode = settings.mode === 'freeforall'
@@ -145,9 +152,68 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
     const attacker = aliveFighters[attackerIndex]
     const defender = aliveFighters[defenderIndex]
 
-    // Generate attack
+    // Generate attack with critical hit chance
     const attack = generateAttack()
-    const damage = attack.damage
+    const isCritical = Math.random() < 0.15 // 15% crit chance
+    let damage = attack.damage
+
+    if (isCritical) {
+      damage = Math.floor(damage * 1.5) // Critical hits deal 50% more damage
+    }
+
+    // Get fighter positions for visual effects
+    const attackerEl = fighterRefs.current[attacker.id]
+    const defenderEl = fighterRefs.current[defender.id]
+
+    if (attackerEl && defenderEl && arenaRef.current) {
+      const arenaRect = arenaRef.current.getBoundingClientRect()
+      const attackerRect = attackerEl.getBoundingClientRect()
+      const defenderRect = defenderEl.getBoundingClientRect()
+
+      const fromX = attackerRect.left + attackerRect.width / 2 - arenaRect.left
+      const fromY = attackerRect.top + attackerRect.height / 2 - arenaRect.top
+      const toX = defenderRect.left + defenderRect.width / 2 - arenaRect.left
+      const toY = defenderRect.top + defenderRect.height / 2 - arenaRect.top
+
+      // Create attack effect (projectile)
+      const effectId = Date.now() + Math.random()
+      setAttackEffects(prev => [...prev, {
+        id: effectId,
+        fromX,
+        fromY,
+        toX,
+        toY,
+        icon: attack.icon,
+        type: attack.type
+      }])
+
+      // Remove attack effect after animation
+      setTimeout(() => {
+        setAttackEffects(prev => prev.filter(e => e.id !== effectId))
+
+        // Show damage number after projectile hits
+        const damageId = Date.now() + Math.random()
+        setDamageNumbers(prev => [...prev, {
+          id: damageId,
+          damage,
+          x: toX,
+          y: toY - 30,
+          isCritical,
+          icon: attack.icon
+        }])
+
+        // Remove damage number after animation
+        setTimeout(() => {
+          setDamageNumbers(prev => prev.filter(d => d.id !== damageId))
+        }, 1000)
+      }, 600)
+    }
+
+    // Screen shake on heavy hits
+    if (damage >= 25 || isCritical) {
+      setScreenShake(true)
+      setTimeout(() => setScreenShake(false), 300)
+    }
 
     // Apply damage with animation
     setIsAnimating(defender.id)
@@ -169,7 +235,8 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
     setFighters(newFighters)
 
     // Log the attack
-    addLog(`${attack.icon} ${attacker.name} uses ${attack.name}! Deals ${damage} damage to ${defender.name}`)
+    const criticalText = isCritical ? ' CRITICAL HIT!' : ''
+    addLog(`${attack.icon} ${attacker.name} uses ${attack.name}! Deals ${damage} damage to ${defender.name}${criticalText}`)
 
     // Check if defender was eliminated
     const newHP = Math.max(0, defender.hp - damage)
@@ -180,14 +247,14 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
 
   const generateAttack = () => {
     const attacks = [
-      { name: 'Quick Jab', damage: getRandomDamage(5, 15), icon: '👊' },
-      { name: 'Power Slash', damage: getRandomDamage(10, 25), icon: '⚔️' },
-      { name: 'Fireball', damage: getRandomDamage(15, 30), icon: '🔥' },
-      { name: 'Thunder Strike', damage: getRandomDamage(12, 28), icon: '⚡' },
-      { name: 'Ice Spike', damage: getRandomDamage(8, 20), icon: '❄️' },
-      { name: 'Poison Dart', damage: getRandomDamage(6, 18), icon: '☠️' },
-      { name: 'Heavy Smash', damage: getRandomDamage(20, 35), icon: '💥' },
-      { name: 'Shadow Strike', damage: getRandomDamage(10, 22), icon: '🌑' },
+      { name: 'Quick Jab', damage: getRandomDamage(5, 15), icon: '👊', type: 'melee' },
+      { name: 'Power Slash', damage: getRandomDamage(10, 25), icon: '⚔️', type: 'melee' },
+      { name: 'Fireball', damage: getRandomDamage(15, 30), icon: '🔥', type: 'magic' },
+      { name: 'Thunder Strike', damage: getRandomDamage(12, 28), icon: '⚡', type: 'magic' },
+      { name: 'Ice Spike', damage: getRandomDamage(8, 20), icon: '❄️', type: 'magic' },
+      { name: 'Poison Dart', damage: getRandomDamage(6, 18), icon: '☠️', type: 'ranged' },
+      { name: 'Heavy Smash', damage: getRandomDamage(20, 35), icon: '💥', type: 'heavy' },
+      { name: 'Shadow Strike', damage: getRandomDamage(10, 22), icon: '🌑', type: 'magic' },
     ]
     return attacks[Math.floor(Math.random() * attacks.length)]
   }
@@ -215,8 +282,35 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
   }
 
   return (
-    <div className="arena-screen">
-      <div className="arena-container">
+    <div className={`arena-screen ${screenShake ? 'screen-shake' : ''}`}>
+      <div className="arena-container" ref={arenaRef}>
+        {/* Render attack effects */}
+        {attackEffects.map(effect => (
+          <AttackEffect
+            key={effect.id}
+            fromX={effect.fromX}
+            fromY={effect.fromY}
+            toX={effect.toX}
+            toY={effect.toY}
+            icon={effect.icon}
+            type={effect.type}
+            onComplete={() => {}}
+          />
+        ))}
+
+        {/* Render damage numbers */}
+        {damageNumbers.map(dmg => (
+          <DamageNumber
+            key={dmg.id}
+            damage={dmg.damage}
+            x={dmg.x}
+            y={dmg.y}
+            isCritical={dmg.isCritical}
+            attackIcon={dmg.icon}
+            onComplete={() => {}}
+          />
+        ))}
+
         <div className="arena-header">
           <h2 className="arena-title">
             {isFreeForAllMode ? '⚔️ FREE FOR ALL ⚔️' : '⚔️ BATTLE ARENA ⚔️'}
@@ -249,6 +343,7 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
               {fighters.map((fighter) => (
                 <div
                   key={fighter.id}
+                  ref={el => fighterRefs.current[fighter.id] = el}
                   className={`ffa-fighter ${!fighter.isAlive ? 'eliminated' : ''} ${isAnimating === fighter.id ? 'attacked' : ''}`}
                 >
                   <div
@@ -285,7 +380,10 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
           // Tournament mode - Traditional 1v1 display
           <div className="battle-stage">
             {fighters[0] && (
-              <div className={`fighter fighter-left ${isAnimating === fighters[0].id ? 'attacked' : ''}`}>
+              <div
+                ref={el => fighterRefs.current[fighters[0].id] = el}
+                className={`fighter fighter-left ${isAnimating === fighters[0].id ? 'attacked' : ''}`}
+              >
                 <div
                   className="fighter-avatar"
                   style={{ backgroundColor: fighters[0].logo ? 'transparent' : fighters[0].color }}
@@ -317,7 +415,10 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
             <div className="vs-text">VS</div>
 
             {fighters[1] && (
-              <div className={`fighter fighter-right ${isAnimating === fighters[1].id ? 'attacked' : ''}`}>
+              <div
+                ref={el => fighterRefs.current[fighters[1].id] = el}
+                className={`fighter fighter-right ${isAnimating === fighters[1].id ? 'attacked' : ''}`}
+              >
                 <div
                   className="fighter-avatar"
                   style={{ backgroundColor: fighters[1].logo ? 'transparent' : fighters[1].color }}

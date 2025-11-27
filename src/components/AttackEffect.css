@@ -1,0 +1,153 @@
+.attack-effect {
+  position: absolute;
+  pointer-events: none;
+  z-index: 999;
+  animation: projectile-fly 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes projectile-fly {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(var(--target-x), var(--target-y)) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--target-x), var(--target-y)) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.attack-icon {
+  font-size: 36px;
+  display: inline-block;
+  animation: rotate-projectile 0.6s linear;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+@keyframes rotate-projectile {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(720deg);
+  }
+}
+
+.attack-trail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  transform: translate(-50%, -50%) rotate(var(--rotation));
+  opacity: 0.6;
+  animation: trail-fade 0.6s ease-out;
+}
+
+@keyframes trail-fade {
+  0% {
+    width: 0;
+    opacity: 0.8;
+  }
+  50% {
+    width: 80px;
+    opacity: 0.6;
+  }
+  100% {
+    width: 40px;
+    opacity: 0;
+  }
+}
+
+/* Different attack type styles */
+.attack-effect.melee .attack-icon {
+  color: var(--accent-primary);
+  animation: slash 0.4s ease-out;
+}
+
+@keyframes slash {
+  0% {
+    transform: scale(0.5) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1.5) rotate(45deg);
+  }
+  100% {
+    transform: scale(1) rotate(90deg);
+  }
+}
+
+.attack-effect.magic .attack-icon {
+  color: var(--accent-secondary);
+  animation: magic-spiral 0.6s ease-out;
+}
+
+@keyframes magic-spiral {
+  0% {
+    transform: scale(0.3) rotate(0deg);
+    filter: drop-shadow(0 0 4px var(--accent-secondary));
+  }
+  50% {
+    transform: scale(1.2) rotate(360deg);
+    filter: drop-shadow(0 0 12px var(--accent-secondary));
+  }
+  100% {
+    transform: scale(1) rotate(720deg);
+    filter: drop-shadow(0 0 8px var(--accent-secondary));
+  }
+}
+
+.attack-effect.ranged .attack-icon {
+  color: var(--hp-yellow);
+}
+
+.attack-effect.heavy .attack-icon {
+  color: var(--hp-red);
+  animation: heavy-smash 0.5s ease-out;
+}
+
+@keyframes heavy-smash {
+  0% {
+    transform: scale(2) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+  }
+  100% {
+    transform: scale(1.8) rotate(360deg);
+  }
+}
+
+/* Impact flash effect */
+.attack-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, var(--accent-primary), transparent);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0;
+  animation: impact-flash 0.3s ease-out 0.5s;
+}
+
+@keyframes impact-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2);
+  }
+}

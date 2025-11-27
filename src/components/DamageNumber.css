@@ -1,0 +1,100 @@
+.damage-number {
+  position: absolute;
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--accent-primary);
+  text-shadow: 3px 3px 0 var(--border-color);
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: float-up 1s ease-out forwards;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    transform: translateY(-10px) scale(1.2);
+  }
+  50% {
+    transform: translateY(-30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+.damage-number.critical {
+  font-size: 36px;
+  color: var(--accent-secondary);
+  animation: float-up-critical 1s ease-out forwards;
+}
+
+@keyframes float-up-critical {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.5) rotate(-10deg);
+  }
+  20% {
+    transform: translateY(-15px) scale(1.4) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-40px) scale(1.1) rotate(-5deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.9) rotate(0deg);
+  }
+}
+
+.damage-icon {
+  font-size: 24px;
+  animation: spin-icon 0.5s ease-out;
+}
+
+.critical .damage-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px var(--accent-secondary));
+}
+
+@keyframes spin-icon {
+  0% {
+    transform: rotate(0deg) scale(0);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.damage-value {
+  font-family: 'Courier New', monospace;
+}
+
+.critical-text {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--accent-secondary);
+  text-shadow: 2px 2px 0 var(--border-color);
+  white-space: nowrap;
+  animation: critical-pulse 0.5s ease-out;
+}
+
+@keyframes critical-pulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(0.8);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.2);
+  }
+}

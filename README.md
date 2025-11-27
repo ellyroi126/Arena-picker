@@ -5,7 +5,15 @@ A fun, pixel-art styled web application where your choices battle it out in a gl
 ## ✨ Features
 
 ### Fully Implemented:
-- ⚔️ **Battle System** - Real-time combat with HP, damage, and various attack skills
+- ⚔️ **Advanced Battle System** - Real-time combat with visual effects
+  - 8 different attack types with unique animations
+  - 💥 **Floating damage numbers** that pop up on hit
+  - ⚡ **Attack projectiles** flying between fighters
+  - ✨ **Critical hits** (15% chance, 50% more damage)
+  - 📺 **Screen shake** on heavy hits
+  - 🎭 **Idle animations** - fighters bob and pulse while waiting
+  - 🔥 **Hit flash effects** when damage is dealt
+  - 🎯 **Attack type system** - melee, magic, ranged, and heavy attacks
 - 🎨 **Pixel Art Styling** - Retro gaming aesthetic with crisp pixel graphics
 - 🔥 **Free For All Mode** - All contestants battle at once, last one standing wins!
   - Grid display showing all fighters simultaneously
