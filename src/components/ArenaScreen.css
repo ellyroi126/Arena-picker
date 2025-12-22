@@ -153,6 +153,362 @@
   border-top: 2px solid var(--border-color);
 }
 
+/* Sprite-style fighters */
+.fighter-sprite {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  /* NO CSS transitions - smoothness comes from 60fps updates */
+  z-index: 10;
+  animation: idle-sway 3s ease-in-out infinite;
+  /* Optimize rendering performance */
+  will-change: transform;
+  transform: translate3d(0, 0, 0); /* Enable hardware acceleration */
+}
+
+.sprite-avatar {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 3px 3px 0 var(--border-color);
+  overflow: hidden;
+  position: relative;
+  animation: float 3s ease-in-out infinite, pulse-ready 2s ease-in-out infinite;
+}
+
+.sprite-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: white;
+  padding: 2px;
+}
+
+.skull-overlay-mini {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  z-index: 10;
+  animation: skull-appear 0.5s ease-out;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+.sprite-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+
+.sprite-class-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.sprite-hp-bar {
+  width: 48px;
+  height: 6px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-color);
+  overflow: hidden;
+  position: relative;
+}
+
+.sprite-hp-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.sprite-name-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--text-light);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 2px solid var(--accent-primary);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 1000;
+  margin-bottom: 8px;
+}
+
+.fighter-sprite:hover .sprite-name-tooltip {
+  opacity: 1;
+}
+
+/* Walking animation */
+.fighter-sprite.walking {
+  animation: walk-cycle 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes walk-cycle {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-3px) scale(1.02) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    transform: translateY(-3px) scale(1.02) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fighter-sprite.walking .sprite-avatar {
+  animation: walk-bob 0.4s ease-in-out infinite;
+}
+
+@keyframes walk-bob {
+  0% {
+    transform: translateY(0) rotate(-2deg) scale(1);
+  }
+  25% {
+    transform: translateY(-2px) rotate(0deg) scale(1.05);
+  }
+  50% {
+    transform: translateY(0) rotate(2deg) scale(1);
+  }
+  75% {
+    transform: translateY(-2px) rotate(0deg) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) rotate(-2deg) scale(1);
+  }
+}
+
+/* Facing direction */
+.fighter-sprite.facing-left .sprite-avatar {
+  transform: scaleX(-1);
+}
+
+.fighter-sprite.facing-left.walking .sprite-avatar {
+  animation: walk-bob-left 0.4s ease-in-out infinite;
+}
+
+@keyframes walk-bob-left {
+  0% {
+    transform: scaleX(-1) translateY(0) rotate(2deg) scale(1);
+  }
+  25% {
+    transform: scaleX(-1) translateY(-2px) rotate(0deg) scale(1.05);
+  }
+  50% {
+    transform: scaleX(-1) translateY(0) rotate(-2deg) scale(1);
+  }
+  75% {
+    transform: scaleX(-1) translateY(-2px) rotate(0deg) scale(1.05);
+  }
+  100% {
+    transform: scaleX(-1) translateY(0) rotate(2deg) scale(1);
+  }
+}
+
+/* Jump animation for sprites */
+.fighter-sprite.jumping {
+  animation: jump-arc 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.fighter-sprite.jumping .sprite-avatar {
+  animation: spin-jump 0.8s ease-in-out;
+}
+
+/* Eliminated sprites */
+.ffa-fighter-sprite.eliminated {
+  opacity: 0.6;
+  filter: grayscale(70%);
+}
+
+.ffa-fighter-sprite.eliminated .sprite-avatar {
+  animation: none;
+}
+
+@keyframes idle-sway {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-1px) translateY(-0.5px);
+  }
+  50% {
+    transform: translateX(0) translateY(-1px);
+  }
+  75% {
+    transform: translateX(1px) translateY(-0.5px);
+  }
+}
+
+/* Smooth jumping animation with arc */
+.fighter-dynamic.jumping {
+  animation: jump-arc 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  position: relative;
+}
+
+/* Add motion trail effect */
+.fighter-dynamic.jumping .fighter-avatar::after,
+.fighter-dynamic.jumping .ffa-avatar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  opacity: 0.4;
+  animation: trail-fade 0.8s ease-out;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes trail-fade {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-15px, 5px) scale(0.9);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-30px, 10px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+/* Motion blur effect during jump */
+.fighter-dynamic.jumping::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+  opacity: 0;
+  animation: motion-glow 0.8s ease-in-out;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes motion-glow {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  30% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  70% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+.fighter-dynamic.jumping .fighter-avatar,
+.fighter-dynamic.jumping .ffa-avatar {
+  animation: spin-jump 0.8s ease-in-out;
+}
+
+@keyframes spin-jump {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(360deg) scale(1.15);
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: rotate(720deg) scale(1);
+  }
+}
+
+@keyframes jump-arc {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(calc(var(--jump-height) * -0.5)) scale(1.05) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(calc(var(--jump-height) * -1)) scale(1.1) rotate(0deg);
+  }
+  75% {
+    transform: translateY(calc(var(--jump-height) * -0.5)) scale(1.05) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+/* Add shadow during jump */
+.fighter-dynamic.jumping::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 8px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
+  animation: jump-shadow 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+  z-index: -1;
+}
+
+@keyframes jump-shadow {
+  0% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateX(-50%) scale(0.6);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
 .fighter {
   flex: 0 0 auto;
   display: flex;
@@ -178,77 +534,76 @@
   right: 15%;
 }
 
-/* Attack Lunge Animation */
-.fighter.attacking {
-  animation: lunge-forward 0.4s ease-out;
+/* Arena platforms */
+.arena-platform {
+  pointer-events: none;
+  z-index: 2;
 }
 
-@keyframes lunge-forward {
-  0% {
-    transform: translateX(0) scale(1);
+/* Arena obstacles */
+.arena-obstacle {
+  pointer-events: none;
+  z-index: 3;
+  animation: idle-obstacle 3s ease-in-out infinite;
+}
+
+@keyframes idle-obstacle {
+  0%, 100% {
+    transform: translateY(0);
   }
   50% {
-    transform: translateX(60px) scale(1.1);
+    transform: translateY(-3px);
+  }
+}
+
+/* Attack Animation - Visual feedback only, no position change */
+.fighter.attacking {
+  animation: attack-pulse 0.4s ease-out;
+}
+
+@keyframes attack-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.3);
   }
   100% {
-    transform: translateX(0) scale(1);
+    transform: scale(1);
+    filter: brightness(1);
   }
 }
 
 .fighter-right.attacking {
-  animation: lunge-backward 0.4s ease-out;
+  animation: attack-pulse 0.4s ease-out;
 }
 
-@keyframes lunge-backward {
-  0% {
-    transform: translateX(0) scale(1);
-  }
-  50% {
-    transform: translateX(-60px) scale(1.1);
-  }
-  100% {
-    transform: translateX(0) scale(1);
-  }
-}
+/* Removed lunge animations - they conflicted with velocity-based movement */
 
 /* Hit Reaction/Knockback */
 .fighter.hit-reaction {
-  animation: knockback 0.5s ease-out, flash-damage 0.3s;
+  animation: hit-flash 0.3s, hit-shake 0.2s;
 }
 
-@keyframes knockback {
-  0% {
-    transform: translateX(0) translateY(0);
-  }
-  30% {
-    transform: translateX(-40px) translateY(-10px);
-  }
-  60% {
-    transform: translateX(-40px) translateY(0);
-  }
-  100% {
-    transform: translateX(0) translateY(0);
-  }
+@keyframes hit-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@keyframes hit-flash {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(2) hue-rotate(10deg); }
 }
 
 .fighter-right.hit-reaction {
-  animation: knockback-right 0.5s ease-out, flash-damage 0.3s;
+  animation: hit-flash 0.3s, hit-shake 0.2s;
 }
 
-@keyframes knockback-right {
-  0% {
-    transform: translateX(0) translateY(0);
-  }
-  30% {
-    transform: translateX(40px) translateY(-10px);
-  }
-  60% {
-    transform: translateX(40px) translateY(0);
-  }
-  100% {
-    transform: translateX(0) translateY(0);
-  }
-}
+/* Removed knockback-right animation - using same subtle shake */
+/* This prevents position conflicts with velocity-based movement */
 
 @keyframes flash-damage {
   0%, 100% {
@@ -279,8 +634,29 @@
   color: white;
   text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
   box-shadow: 4px 4px 0 var(--border-color);
-  animation: float 3s ease-in-out infinite, pulse-ready 2s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite, pulse-ready 2s ease-in-out infinite, wiggle 4s ease-in-out infinite;
   overflow: hidden;
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  10% {
+    transform: rotate(-3deg) scale(1.02);
+  }
+  20% {
+    transform: rotate(3deg) scale(0.98);
+  }
+  30% {
+    transform: rotate(-2deg) scale(1.01);
+  }
+  40% {
+    transform: rotate(2deg) scale(0.99);
+  }
+  50% {
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 @keyframes pulse-ready {
@@ -310,6 +686,27 @@
 .fighter-info {
   width: 100%;
   max-width: 250px;
+}
+
+.fighter-class {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  text-align: center;
+  color: var(--accent-secondary);
+  text-shadow: 1px 1px 0 var(--border-color);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 1px 1px 0 var(--border-color);
+  }
+  50% {
+    opacity: 0.8;
+    text-shadow: 1px 1px 0 var(--border-color), 0 0 10px var(--accent-secondary);
+  }
 }
 
 .fighter-name {
@@ -507,6 +904,26 @@
   position: relative;
 }
 
+/* FFA Platformer Mode */
+.ffa-platformer {
+  min-height: 600px;
+  position: relative;
+}
+
+.ffa-fighter-dynamic {
+  width: auto;
+  min-width: 120px;
+}
+
+.ffa-fighter-dynamic.eliminated {
+  opacity: 0.5;
+  filter: grayscale(70%);
+}
+
+.ffa-fighter-dynamic.eliminated .ffa-avatar {
+  animation: none;
+}
+
 .fighters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -554,25 +971,28 @@
 }
 
 .ffa-fighter.attacking {
-  animation: punch-out 0.4s ease-out;
+  animation: attack-glow 0.4s ease-out;
 }
 
-@keyframes punch-out {
+@keyframes attack-glow {
   0% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
+    filter: brightness(1);
   }
   40% {
-    transform: translateY(-8px) scale(1.1);
+    transform: scale(1.1);
+    filter: brightness(1.3) drop-shadow(0 0 10px var(--accent-primary));
   }
   100% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
+    filter: brightness(1);
   }
 }
 
 @keyframes shake-ffa {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 }
 
 @keyframes flash-red {
@@ -609,7 +1029,7 @@
   box-shadow: 3px 3px 0 var(--border-color);
   overflow: hidden;
   position: relative;
-  animation: float 3s ease-in-out infinite, idle-bob 2s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite, idle-bob 2s ease-in-out infinite, wiggle 4s ease-in-out infinite;
 }
 
 @keyframes idle-bob {
@@ -660,6 +1080,15 @@
 .ffa-info {
   width: 100%;
   text-align: center;
+}
+
+.ffa-class {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: var(--accent-secondary);
+  text-shadow: 1px 1px 0 var(--border-color);
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .ffa-name {

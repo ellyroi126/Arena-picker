@@ -6,7 +6,7 @@
 }
 
 :root {
-  /* Pixel Art Color Palette */
+  /* Pixel Art Color Palette - Dark Theme (Default) */
   --bg-dark: #1a1a2e;
   --bg-medium: #16213e;
   --bg-light: #0f3460;
@@ -31,6 +31,22 @@
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+}
+
+/* Light Theme Override */
+:root[data-theme="light"] {
+  --bg-dark: #f5f5f5;
+  --bg-medium: #ffffff;
+  --bg-light: #e8e8e8;
+  --accent-primary: #e94560;
+  --accent-secondary: #f39c12;
+  --accent-success: #2ecc71;
+  --text-light: #2c3e50;
+  --text-dark: #ecf0f1;
+  --border-color: #95a5a6;
+  --hp-red: #e74c3c;
+  --hp-green: #27ae60;
+  --hp-yellow: #f39c12;
 }
 
 body {

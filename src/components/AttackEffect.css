@@ -1,153 +1,946 @@
 .attack-effect {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 999;
-  animation: projectile-fly 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-@keyframes projectile-fly {
-  0% {
-    transform: translate(0, 0) scale(0.5);
-    opacity: 1;
+/* ===== MELEE ATTACK EFFECTS ===== */
+
+/* Wind-up at attacker position */
+.melee-windup {
+  position: absolute;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  animation: windup-appear 0.2s ease-out;
+}
+
+@keyframes windup-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
   }
-  80% {
-    transform: translate(var(--target-x), var(--target-y)) scale(1);
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.windup-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: windup-pulse 0.2s ease-out;
+  box-shadow: 0 0 15px var(--accent-primary);
+}
+
+.windup-circle-2 {
+  animation: windup-pulse-2 0.25s ease-out;
+  border-width: 2px;
+  opacity: 0.6;
+}
+
+@keyframes windup-pulse {
+  0% {
+    transform: scale(0.5);
     opacity: 1;
   }
   100% {
-    transform: translate(var(--target-x), var(--target-y)) scale(1.5);
+    transform: scale(1.5);
     opacity: 0;
   }
 }
 
-.attack-icon {
-  font-size: 36px;
-  display: inline-block;
-  animation: rotate-projectile 0.6s linear;
-  filter: drop-shadow(0 0 8px currentColor);
-}
-
-@keyframes rotate-projectile {
+@keyframes windup-pulse-2 {
   0% {
-    transform: rotate(0deg);
+    transform: scale(0.3);
+    opacity: 0.8;
   }
   100% {
-    transform: rotate(720deg);
+    transform: scale(1.8);
+    opacity: 0;
   }
 }
 
-.attack-trail {
+/* Slash traveling from attacker to target */
+.melee-slash-travel {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 60px;
+  width: 80px;
+  height: 80px;
+  animation: slash-arc-travel 0.35s cubic-bezier(0.4, 0.0, 0.2, 1) 0.15s both;
+}
+
+@keyframes slash-arc-travel {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) - 90deg)) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 45deg)) scale(1.2);
+    opacity: 1;
+  }
+}
+
+.slash-arc {
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--accent-primary);
+  border-radius: 50%;
+  clip-path: polygon(50% 50%, 100% 0%, 100% 50%);
+  filter: drop-shadow(0 0 10px var(--accent-primary));
+  box-shadow: 0 0 20px var(--accent-primary);
+}
+
+.slash-trail {
+  position: absolute;
+  width: 100%;
   height: 4px;
   background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
-  transform: translate(-50%, -50%) rotate(var(--rotation));
-  opacity: 0.6;
-  animation: trail-fade 0.6s ease-out;
+  top: 50%;
+  left: 0;
+  filter: blur(2px);
+  animation: trail-fade 0.35s ease-out;
 }
 
 @keyframes trail-fade {
   0% {
-    width: 0;
-    opacity: 0.8;
+    opacity: 0;
   }
   50% {
-    width: 80px;
-    opacity: 0.6;
+    opacity: 0.8;
   }
   100% {
-    width: 40px;
     opacity: 0;
   }
 }
 
-/* Different attack type styles */
-.attack-effect.melee .attack-icon {
-  color: var(--accent-primary);
-  animation: slash 0.4s ease-out;
-}
-
-@keyframes slash {
-  0% {
-    transform: scale(0.5) rotate(-45deg);
-  }
-  50% {
-    transform: scale(1.5) rotate(45deg);
-  }
-  100% {
-    transform: scale(1) rotate(90deg);
-  }
-}
-
-.attack-effect.magic .attack-icon {
-  color: var(--accent-secondary);
-  animation: magic-spiral 0.6s ease-out;
-}
-
-@keyframes magic-spiral {
-  0% {
-    transform: scale(0.3) rotate(0deg);
-    filter: drop-shadow(0 0 4px var(--accent-secondary));
-  }
-  50% {
-    transform: scale(1.2) rotate(360deg);
-    filter: drop-shadow(0 0 12px var(--accent-secondary));
-  }
-  100% {
-    transform: scale(1) rotate(720deg);
-    filter: drop-shadow(0 0 8px var(--accent-secondary));
-  }
-}
-
-.attack-effect.ranged .attack-icon {
-  color: var(--hp-yellow);
-}
-
-.attack-effect.heavy .attack-icon {
-  color: var(--hp-red);
-  animation: heavy-smash 0.5s ease-out;
-}
-
-@keyframes heavy-smash {
-  0% {
-    transform: scale(2) rotate(0deg);
-  }
-  50% {
-    transform: scale(1.5) rotate(180deg);
-  }
-  100% {
-    transform: scale(1.8) rotate(360deg);
-  }
-}
-
-/* Impact flash effect */
-.attack-effect::after {
-  content: '';
+/* Impact at target */
+.melee-impact {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  left: var(--to-x);
+  top: var(--to-y);
   width: 100px;
   height: 100px;
-  background: radial-gradient(circle, var(--accent-primary), transparent);
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  opacity: 0;
-  animation: impact-flash 0.3s ease-out 0.5s;
+  animation: impact-appear 0.1s ease-out 0.45s both;
 }
 
-@keyframes impact-flash {
+.impact-ring {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: ring-blast 0.4s ease-out;
+}
+
+.impact-ring-2 {
+  border-width: 2px;
+  opacity: 0.6;
+  animation: ring-blast-2 0.5s ease-out;
+}
+
+@keyframes ring-blast {
   0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
     opacity: 0;
+  }
+}
+
+@keyframes ring-blast-2 {
+  0% {
     transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+.impact-sparks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 25px;
+  background: linear-gradient(180deg, var(--accent-primary), transparent);
+  transform-origin: top center;
+  transform: translateX(-50%) rotate(var(--spark-angle));
+  animation: spark-burst 0.4s ease-out;
+}
+
+@keyframes spark-burst {
+  0% {
+    height: 10px;
+    opacity: 1;
+    filter: brightness(2);
+  }
+  100% {
+    height: 45px;
+    opacity: 0;
+  }
+}
+
+/* ===== MAGIC ATTACK EFFECTS ===== */
+
+/* Charge-up at attacker */
+.magic-charge {
+  position: absolute;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: 50px;
+  height: 50px;
+  transform: translate(-50%, -50%);
+  animation: charge-grow 0.25s ease-out;
+}
+
+@keyframes charge-grow {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.charge-orb {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--accent-secondary), transparent 70%);
+  border-radius: 50%;
+  animation: charge-pulse 0.25s ease-in-out;
+  box-shadow: 0 0 25px var(--accent-secondary);
+}
+
+@keyframes charge-pulse {
+  0%, 100% {
+    transform: scale(1);
   }
   50% {
+    transform: scale(1.3);
+  }
+}
+
+.charge-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.charge-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-secondary);
+  border-radius: 50%;
+  transform-origin: center;
+  animation: particle-converge 0.25s ease-in;
+}
+
+@keyframes particle-converge {
+  0% {
+    transform: translate(-50%, -50%) translateY(-40px) rotate(var(--charge-angle));
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(0) rotate(var(--charge-angle));
+    opacity: 1;
+  }
+}
+
+/* Magic projectile traveling with arc */
+.magic-projectile {
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  animation: magic-arc-travel 0.5s cubic-bezier(0.33, 0.0, 0.2, 1) 0.2s both;
+}
+
+@keyframes magic-arc-travel {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  50% {
+    left: var(--control-x);
+    top: var(--control-y);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.magic-orb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.orb-core {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--accent-secondary), var(--accent-secondary) 50%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--accent-secondary);
+  animation: orb-pulse 0.3s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+.orb-glow {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  left: -10%;
+  top: -10%;
+  background: radial-gradient(circle, rgba(254, 202, 87, 0.4), transparent 60%);
+  border-radius: 50%;
+  animation: glow-flicker 0.4s ease-in-out infinite;
+}
+
+@keyframes glow-flicker {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.magic-trail-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.magic-trail-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, var(--accent-secondary), transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: trail-particle 0.5s ease-out var(--trail-delay);
+}
+
+@keyframes trail-particle {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
     opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1.5);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Magic impact */
+.magic-impact {
+  position: absolute;
+  left: var(--to-x);
+  top: var(--to-y);
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  animation: impact-appear 0.1s ease-out 0.65s both;
+}
+
+.magic-explosion {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--accent-secondary), transparent 60%);
+  border-radius: 50%;
+  animation: explosion-burst 0.5s ease-out;
+  filter: blur(5px);
+}
+
+@keyframes explosion-burst {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.magic-waves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.magic-wave {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--accent-secondary);
+  border-radius: 50%;
+  animation: wave-expand 0.6s ease-out;
+}
+
+.magic-wave-2 {
+  animation: wave-expand-2 0.7s ease-out;
+  border-width: 2px;
+}
+
+@keyframes wave-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes wave-expand-2 {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+.magic-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 35px;
+  background: linear-gradient(180deg, var(--accent-secondary), transparent);
+  transform-origin: top center;
+  transform: translateX(-50%) rotate(var(--magic-angle));
+  animation: magic-spark-fly 0.5s ease-out;
+}
+
+@keyframes magic-spark-fly {
+  0% {
+    height: 20px;
+    opacity: 1;
+  }
+  100% {
+    height: 55px;
+    opacity: 0;
+  }
+}
+
+/* ===== RANGED ATTACK EFFECTS ===== */
+
+/* Drawback at attacker */
+.ranged-drawback {
+  position: absolute;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  animation: drawback-appear 0.15s ease-out;
+}
+
+.drawback-glow {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--hp-yellow), transparent 70%);
+  border-radius: 50%;
+  animation: drawback-pulse 0.15s ease-out;
+  box-shadow: 0 0 20px var(--hp-yellow);
+}
+
+@keyframes drawback-pulse {
+  0% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Arrow flying */
+.ranged-projectile-container {
+  position: absolute;
+  animation: arrow-fly 0.45s cubic-bezier(0.25, 0.0, 0.2, 1) 0.12s both;
+}
+
+@keyframes arrow-fly {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+  }
+}
+
+.ranged-arrow {
+  position: relative;
+  width: 40px;
+  height: 6px;
+  transform: translate(-50%, -50%) rotate(var(--angle));
+}
+
+.arrow-head {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: var(--hp-yellow);
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 15px var(--hp-yellow);
+  animation: arrow-glow 0.2s ease-in-out infinite;
+}
+
+@keyframes arrow-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--hp-yellow);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--hp-yellow), 0 0 35px rgba(254, 202, 87, 0.6);
+  }
+}
+
+.arrow-shaft {
+  position: absolute;
+  width: 35px;
+  height: 3px;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #8B4513, var(--hp-yellow));
+}
+
+.arrow-fletching {
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  width: 8px;
+  height: 10px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #DC143C, transparent);
+  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+}
+
+.ranged-trail {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--angle));
+}
+
+.trail-segment {
+  position: absolute;
+  width: 25px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--hp-yellow), transparent);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: trail-fade-in 0.45s ease-out var(--trail-delay);
+}
+
+@keyframes trail-fade-in {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) translateX(0);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(2);
+    transform: translate(-50%, -50%) translateX(-35px);
+  }
+}
+
+/* Ranged impact */
+.ranged-impact {
+  position: absolute;
+  left: var(--to-x);
+  top: var(--to-y);
+  width: 80px;
+  height: 80px;
+  transform: translate(-50%, -50%);
+  animation: impact-appear 0.1s ease-out 0.52s both;
+}
+
+.impact-flash {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--hp-yellow), transparent 50%);
+  border-radius: 50%;
+  animation: flash-burst 0.35s ease-out;
+  box-shadow: 0 0 30px var(--hp-yellow);
+}
+
+@keyframes flash-burst {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.impact-ripple {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--hp-yellow);
+  border-radius: 50%;
+  animation: ripple-expand 0.4s ease-out;
+}
+
+@keyframes ripple-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* ===== HEAVY ATTACK EFFECTS ===== */
+
+/* Wind-up at attacker */
+.heavy-windup {
+  position: absolute;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  animation: heavy-windup-appear 0.25s ease-out;
+}
+
+.heavy-charge {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--hp-red), transparent 60%);
+  border-radius: 50%;
+  animation: heavy-charge-pulse 0.25s ease-in-out 2;
+  box-shadow: 0 0 35px var(--hp-red);
+}
+
+@keyframes heavy-charge-pulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.heavy-charge-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--hp-red);
+  border-radius: 50%;
+  animation: charge-ring-expand 0.25s ease-out 2;
+}
+
+@keyframes charge-ring-expand {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Boulder traveling */
+.heavy-projectile-container {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  animation: boulder-arc-fly 0.5s cubic-bezier(0.5, 0.0, 0.3, 1) 0.2s both;
+}
+
+@keyframes boulder-arc-fly {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+  }
+  50% {
+    left: var(--control-x);
+    top: var(--control-y);
+    transform: translate(-50%, -50%) scale(1.4) rotate(360deg);
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: translate(-50%, -50%) scale(1.1) rotate(720deg);
+  }
+}
+
+.heavy-boulder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.boulder-core {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 30%, #B22222, var(--hp-red) 40%, #8B0000);
+  border-radius: 50%;
+  box-shadow: 0 0 40px var(--hp-red), inset -10px -10px 20px rgba(0, 0, 0, 0.5);
+  animation: boulder-pulse 0.25s ease-in-out infinite;
+}
+
+@keyframes boulder-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.boulder-cracks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 5px 0 3px rgba(0, 0, 0, 0.8), inset -5px 0 3px rgba(0, 0, 0, 0.8);
+}
+
+.heavy-distortion {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  left: -25%;
+  top: -25%;
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.3), transparent 60%);
+  border-radius: 50%;
+  animation: distortion-pulse 0.3s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+@keyframes distortion-pulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+/* Heavy impact */
+.heavy-impact {
+  position: absolute;
+  left: var(--to-x);
+  top: var(--to-y);
+  width: 150px;
+  height: 150px;
+  transform: translate(-50%, -50%);
+  animation: impact-appear 0.1s ease-out 0.65s both;
+}
+
+.heavy-explosion {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--hp-red), rgba(231, 76, 60, 0.5) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: heavy-explode 0.6s ease-out;
+  box-shadow: 0 0 50px var(--hp-red);
+  filter: blur(4px);
+}
+
+@keyframes heavy-explode {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.shockwave-ring {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 5px solid var(--hp-red);
+  border-radius: 50%;
+  animation: shockwave-blast 0.7s ease-out;
+  box-shadow: 0 0 20px var(--hp-red);
+}
+
+.shockwave-ring-2 {
+  border-width: 3px;
+  animation: shockwave-blast-2 0.8s ease-out;
+}
+
+@keyframes shockwave-blast {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.5);
+    opacity: 0;
+  }
+}
+
+@keyframes shockwave-blast-2 {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
+}
+
+.debris-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.debris {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, #8B4513, transparent);
+  transform-origin: top center;
+  transform: translateX(-50%) rotate(var(--debris-angle));
+  animation: debris-scatter 0.6s ease-out;
+}
+
+@keyframes debris-scatter {
+  0% {
+    height: 10px;
+    opacity: 1;
+  }
+  100% {
+    height: 50px;
+    opacity: 0;
+    transform: translateX(-50%) rotate(var(--debris-angle)) translateY(60px);
+  }
+}
+
+@keyframes impact-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes windup-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawback-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heavy-windup-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

@@ -4,6 +4,36 @@
   position: relative;
 }
 
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  background: var(--bg-medium);
+  border: 3px solid var(--border-color);
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+  background: var(--bg-light);
+}
+
+.theme-toggle-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.3);
+}
+
 /* Optional: Add pixel grid background */
 .app::before {
   content: '';

@@ -1,20 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './SetupScreen.css'
 import { getBestLogo } from '../utils/logoFetcher'
+import HelpModal from './HelpModal'
+import StatsModal from './StatsModal'
+import Tooltip from './Tooltip'
 
-function SetupScreen({ onStartBattle }) {
-  const [contestants, setContestants] = useState([])
+function SetupScreen({ onStartBattle, initialContestants = [] }) {
+  const [contestants, setContestants] = useState(initialContestants)
   const [inputValue, setInputValue] = useState('')
   const [isLoadingLogo, setIsLoadingLogo] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isStatsOpen, setIsStatsOpen] = useState(false)
   const [settings, setSettings] = useState({
-    battleSpeed: 1000,
+    battleSpeed: 1500, // Default to Very Slow (rescaled)
     startingHP: 100,
     mode: 'freeforall',
+    arenaPreset: 'random', // New: arena layout preset
   })
+
+  // Update contestants if initialContestants changes
+  useEffect(() => {
+    if (initialContestants.length > 0) {
+      setContestants(initialContestants)
+    }
+  }, [initialContestants])
 
   const addContestant = async (e) => {
     e.preventDefault()
-    if (inputValue.trim() && contestants.length < 8) {
+    if (inputValue.trim() && contestants.length < 16) {
       setIsLoadingLogo(true)
 
       // Fetch logo for the contestant
@@ -38,6 +51,10 @@ function SetupScreen({ onStartBattle }) {
     setContestants(contestants.filter(c => c.id !== id))
   }
 
+  const clearAllContestants = () => {
+    setContestants([])
+  }
+
   const generateRandomColor = () => {
     const colors = [
       '#e74c3c', '#3498db', '#2ecc71', '#f39c12',
@@ -54,10 +71,33 @@ function SetupScreen({ onStartBattle }) {
 
   return (
     <div className="setup-screen">
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+
       <div className="setup-container pixel-container">
-        <h1 className="title pixel-text">
-          ⚔️ ARENA PICKER ⚔️
-        </h1>
+        <div className="title-row">
+          <h1 className="title pixel-text">
+            ⚔️ ARENA PICKER ⚔️
+          </h1>
+          <div className="header-buttons">
+            <Tooltip content="View battle stats & leaderboard" position="left">
+              <button
+                className="stats-button pixel-button"
+                onClick={() => setIsStatsOpen(true)}
+              >
+                📊
+              </button>
+            </Tooltip>
+            <Tooltip content="View game guide and class info" position="left">
+              <button
+                className="help-button pixel-button"
+                onClick={() => setIsHelpOpen(true)}
+              >
+                ❓
+              </button>
+            </Tooltip>
+          </div>
+        </div>
         <p className="subtitle">Enter your choices and let them battle!</p>
 
         <form onSubmit={addContestant} className="input-section">
@@ -72,14 +112,24 @@ function SetupScreen({ onStartBattle }) {
           <button
             type="submit"
             className="pixel-button"
-            disabled={contestants.length >= 8 || isLoadingLogo}
+            disabled={contestants.length >= 16 || isLoadingLogo}
           >
             {isLoadingLogo ? 'Loading...' : 'Add'}
           </button>
         </form>
 
         <div className="contestants-list">
-          <h3>Contestants ({contestants.length}/8)</h3>
+          <div className="contestants-header">
+            <h3>Contestants ({contestants.length}/16)</h3>
+            {contestants.length > 0 && (
+              <button
+                className="pixel-button clear-all-btn"
+                onClick={clearAllContestants}
+              >
+                🗑️ Clear All
+              </button>
+            )}
+          </div>
           {contestants.length === 0 && (
             <p className="empty-message">No contestants yet. Add at least 2!</p>
           )}
@@ -122,13 +172,30 @@ function SetupScreen({ onStartBattle }) {
           </div>
 
           <div className="setting-item">
+            <label>Arena Layout:</label>
+            <select
+              className="pixel-input"
+              value={settings.arenaPreset}
+              onChange={(e) => setSettings({ ...settings, arenaPreset: e.target.value })}
+            >
+              <option value="random">🎲 Random</option>
+              <option value="classic">⚔️ Classic</option>
+              <option value="vertical">📏 Vertical Tower</option>
+              <option value="symmetrical">⚖️ Symmetrical</option>
+              <option value="chaotic">💥 Chaotic</option>
+              <option value="minimal">📐 Minimal</option>
+            </select>
+          </div>
+
+          <div className="setting-item">
             <label>Battle Speed:</label>
             <select
               className="pixel-input"
               value={settings.battleSpeed}
               onChange={(e) => setSettings({ ...settings, battleSpeed: Number(e.target.value) })}
             >
-              <option value="500">Fast (0.5s)</option>
+              <option value="300">Ultra Fast (0.3s)</option>
+              <option value="600">Fast (0.6s)</option>
               <option value="1000">Normal (1s)</option>
               <option value="1500">Slow (1.5s)</option>
               <option value="2000">Very Slow (2s)</option>
