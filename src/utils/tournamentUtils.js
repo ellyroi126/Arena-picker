@@ -47,6 +47,38 @@ export const createTournamentBracket = (contestants) => {
 }
 
 /**
+ * Auto-advances bye matches (matches with only one fighter)
+ * @param {Array} bracket - The tournament bracket
+ * @returns {Array} - Updated bracket with bye matches advanced
+ */
+export const processByeMatches = (bracket) => {
+  let newBracket = JSON.parse(JSON.stringify(bracket))
+  let hasChanges = true
+
+  while (hasChanges) {
+    hasChanges = false
+
+    for (let roundIndex = 0; roundIndex < newBracket.length; roundIndex++) {
+      const round = newBracket[roundIndex]
+      for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+        const match = round[matchIndex]
+
+        // Check for bye match (has fighter1 but no fighter2)
+        if (match.fighter1 && !match.fighter2 && !match.winner) {
+          // Auto-advance fighter1
+          newBracket = updateBracketWithWinner(newBracket, roundIndex, matchIndex, match.fighter1)
+          hasChanges = true
+          break
+        }
+      }
+      if (hasChanges) break
+    }
+  }
+
+  return newBracket
+}
+
+/**
  * Gets the next match that needs to be played
  * @param {Array} bracket - The tournament bracket
  * @returns {Object|null} - The next match or null if tournament is over
