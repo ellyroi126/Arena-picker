@@ -11,7 +11,20 @@ function WinnerScreen({ winner, onReset }) {
           style={{ backgroundColor: winner.logo ? 'transparent' : winner.color }}
         >
           {winner.logo ? (
-            <img src={winner.logo} alt={winner.name} />
+            <img
+              src={winner.logo}
+              alt={winner.name}
+              onError={(e) => {
+                e.target.style.display = 'none'
+                const parent = e.target.parentElement
+                if (parent) {
+                  parent.style.backgroundColor = winner.color
+                  if (!parent.textContent || parent.textContent.trim() === '') {
+                    parent.appendChild(document.createTextNode(winner.name.charAt(0).toUpperCase()))
+                  }
+                }
+              }}
+            />
           ) : (
             winner.name.charAt(0).toUpperCase()
           )}

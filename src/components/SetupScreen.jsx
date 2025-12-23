@@ -81,10 +81,12 @@ function SetupScreen({ onStartBattle, initialContestants = [] }) {
       : getPresetContestants(presetId).slice(0, 16 - contestants.length)
 
     const newContestants = []
-    for (const name of names) {
+    const baseId = Date.now()
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i]
       const logo = await getBestLogo(name)
       newContestants.push({
-        id: Date.now() + Math.random(),
+        id: baseId + i, // Use incremental IDs to ensure uniqueness
         name: name,
         hp: settings.startingHP,
         maxHP: settings.startingHP,
@@ -214,7 +216,20 @@ function SetupScreen({ onStartBattle, initialContestants = [] }) {
                 style={{ backgroundColor: contestant.logo ? 'transparent' : contestant.color }}
               >
                 {contestant.logo ? (
-                  <img src={contestant.logo} alt={contestant.name} />
+                  <img
+                    src={contestant.logo}
+                    alt={contestant.name}
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const parent = e.target.parentElement
+                      if (parent) {
+                        parent.style.backgroundColor = contestant.color
+                        if (!parent.textContent || parent.textContent.trim() === '') {
+                          parent.appendChild(document.createTextNode(contestant.name.charAt(0).toUpperCase()))
+                        }
+                      }
+                    }}
+                  />
                 ) : (
                   contestant.name.charAt(0).toUpperCase()
                 )}

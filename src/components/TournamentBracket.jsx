@@ -24,7 +24,20 @@ function TournamentBracket({ bracket, currentMatch }) {
                 style={{ backgroundColor: match.fighter1.color }}
               >
                 {match.fighter1.logo ? (
-                  <img src={match.fighter1.logo} alt={match.fighter1.name} />
+                  <img
+                    src={match.fighter1.logo}
+                    alt={match.fighter1.name}
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const parent = e.target.parentElement
+                      if (parent) {
+                        parent.style.backgroundColor = match.fighter1.color
+                        if (!parent.textContent || parent.textContent.trim() === '') {
+                          parent.appendChild(document.createTextNode(match.fighter1.name.charAt(0).toUpperCase()))
+                        }
+                      }
+                    }}
+                  />
                 ) : (
                   match.fighter1.name.charAt(0).toUpperCase()
                 )}
@@ -46,7 +59,20 @@ function TournamentBracket({ bracket, currentMatch }) {
                 style={{ backgroundColor: match.fighter2.color }}
               >
                 {match.fighter2.logo ? (
-                  <img src={match.fighter2.logo} alt={match.fighter2.name} />
+                  <img
+                    src={match.fighter2.logo}
+                    alt={match.fighter2.name}
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const parent = e.target.parentElement
+                      if (parent) {
+                        parent.style.backgroundColor = match.fighter2.color
+                        if (!parent.textContent || parent.textContent.trim() === '') {
+                          parent.appendChild(document.createTextNode(match.fighter2.name.charAt(0).toUpperCase()))
+                        }
+                      }
+                    }}
+                  />
                 ) : (
                   match.fighter2.name.charAt(0).toUpperCase()
                 )}

@@ -947,9 +947,16 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                       src={fighter.logo}
                       alt={fighter.name}
                       onError={(e) => {
+                        // Simple fallback: hide image and show background color with letter
                         e.target.style.display = 'none'
-                        e.target.parentElement.style.backgroundColor = fighter.color
-                        e.target.parentElement.innerHTML = fighter.name.charAt(0).toUpperCase() + (e.target.parentElement.querySelector('.skull-overlay-mini') ? '<div class="skull-overlay-mini">💀</div>' : '')
+                        const parent = e.target.parentElement
+                        if (parent) {
+                          parent.style.backgroundColor = fighter.color
+                          // Add text node if not already present
+                          if (!parent.textContent || parent.textContent.trim() === '') {
+                            parent.appendChild(document.createTextNode(fighter.name.charAt(0).toUpperCase()))
+                          }
+                        }
                       }}
                     />
                   ) : (
@@ -1049,8 +1056,13 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                       alt={fighters[0].name}
                       onError={(e) => {
                         e.target.style.display = 'none'
-                        e.target.parentElement.style.backgroundColor = fighters[0].color
-                        e.target.parentElement.textContent = fighters[0].name.charAt(0).toUpperCase()
+                        const parent = e.target.parentElement
+                        if (parent) {
+                          parent.style.backgroundColor = fighters[0].color
+                          if (!parent.textContent || parent.textContent.trim() === '') {
+                            parent.appendChild(document.createTextNode(fighters[0].name.charAt(0).toUpperCase()))
+                          }
+                        }
                       }}
                     />
                   ) : (
@@ -1103,8 +1115,13 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                       alt={fighters[1].name}
                       onError={(e) => {
                         e.target.style.display = 'none'
-                        e.target.parentElement.style.backgroundColor = fighters[1].color
-                        e.target.parentElement.textContent = fighters[1].name.charAt(0).toUpperCase()
+                        const parent = e.target.parentElement
+                        if (parent) {
+                          parent.style.backgroundColor = fighters[1].color
+                          if (!parent.textContent || parent.textContent.trim() === '') {
+                            parent.appendChild(document.createTextNode(fighters[1].name.charAt(0).toUpperCase()))
+                          }
+                        }
                       }}
                     />
                   ) : (
