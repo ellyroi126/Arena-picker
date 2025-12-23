@@ -20,6 +20,7 @@ import { saveBattleResult } from '../utils/battleHistory'
 function ArenaScreen({ contestants, settings, onBattleEnd }) {
   const [fighters, setFighters] = useState([])
   const [battleLog, setBattleLog] = useState([])
+  const [killFeed, setKillFeed] = useState([]) // New: separate kill feed for eliminations
   const [isAnimating, setIsAnimating] = useState(null) // Store fighter ID being attacked
   const [attackingFighter, setAttackingFighter] = useState(null) // Fighter lunging forward
   const [bracket, setBracket] = useState([])
@@ -35,6 +36,7 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
   const [battleSpeed, setBattleSpeed] = useState(settings.battleSpeed) // Dynamic battle speed
   const [battleStartTime, setBattleStartTime] = useState(null) // Track battle duration
   const battleLogRef = useRef(null)
+  const killFeedRef = useRef(null) // New: kill feed ref
   const arenaRef = useRef(null)
   const fighterRefs = useRef({})
 
@@ -774,12 +776,13 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
 
     // Log the attack
     const criticalText = isCritical ? ' CRITICAL HIT!' : ''
-    addLog(`${attack.icon} ${attacker.name} uses ${attack.name}! Deals ${damage} damage to ${defender.name}${criticalText}`)
+    addLog(`${attack.icon} ${attacker.name} uses ${attack.name}! Deals ${damage} damage to ${defender.name}${criticalText}`, isCritical ? 'critical' : 'normal')
 
     // Check if defender was eliminated
     const newHP = Math.max(0, defender.hp - damage)
     if (newHP === 0) {
-      addLog(`💀 ${defender.name} has been eliminated!`)
+      addLog(`💀 ${defender.name} has been eliminated!`, 'kill')
+      addKill(attacker, defender) // Add to kill feed
       soundEffects.defeat() // Play defeat sound
     }
   }
@@ -788,8 +791,18 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
     return Math.floor(Math.random() * (max - min + 1)) + min
   }
 
-  const addLog = (message) => {
-    setBattleLog(prev => [...prev, { id: Date.now() + Math.random(), text: message }])
+  const addLog = (message, type = 'normal') => {
+    setBattleLog(prev => [...prev, { id: Date.now() + Math.random(), text: message, type }])
+  }
+
+  const addKill = (attacker, victim) => {
+    const killMessage = {
+      id: Date.now() + Math.random(),
+      attacker: attacker.name,
+      victim: victim.name,
+      timestamp: Date.now()
+    }
+    setKillFeed(prev => [killMessage, ...prev].slice(0, 10)) // Keep last 10 kills
   }
 
   const getHPPercentage = (hp, maxHP) => {
@@ -865,14 +878,181 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
           )}
         </div>
 
-        {isTournamentMode && bracket.length > 0 && (
-          <TournamentBracket
-            bracket={bracket}
-            currentMatch={currentMatchInfo ? currentMatchInfo.match : null}
-          />
-        )}
+        {/* Tournament Mode: Side-by-side layout */}
+        {isTournamentMode ? (
+          <div className="tournament-layout">
+            {bracket.length > 0 && (
+              <TournamentBracket
+                bracket={bracket}
+                currentMatch={currentMatchInfo ? currentMatchInfo.match : null}
+              />
+            )}
 
-        {isFreeForAllMode ? (
+            {/* Tournament Arena */}
+            <div className="battle-stage platformer-arena">
+              {/* Arena background layers */}
+              <div className="arena-bg-layer far-bg"></div>
+              <div className="arena-bg-layer mid-bg"></div>
+
+              {/* Render platforms */}
+              {arenaLayout && arenaLayout.platforms.map(platform => (
+                <div
+                  key={platform.id}
+                  className="arena-platform"
+                  style={{
+                    position: 'absolute',
+                    left: `${platform.x}px`,
+                    top: `${platform.y}px`,
+                    width: `${platform.width}px`,
+                    height: `${platform.height}px`,
+                    background: `linear-gradient(180deg, ${platform.color} 0%, var(--bg-dark) 100%)`,
+                    borderTop: platform.id === 'ground' ? '3px solid var(--accent-primary)' : '2px solid var(--border-color)',
+                    boxShadow: platform.id === 'ground' ? '0 -4px 20px rgba(233, 69, 96, 0.3)' : 'none',
+                  }}
+                />
+              ))}
+
+              {/* Render obstacles */}
+              {arenaLayout && arenaLayout.obstacles.map(obstacle => (
+                <div
+                  key={obstacle.id}
+                  className="arena-obstacle"
+                  style={{
+                    position: 'absolute',
+                    left: `${obstacle.x}px`,
+                    top: `${obstacle.y}px`,
+                    width: `${obstacle.width}px`,
+                    height: `${obstacle.height}px`,
+                    backgroundColor: obstacle.color,
+                    border: '2px solid var(--border-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                  }}
+                >
+                  {obstacle.icon}
+                </div>
+              ))}
+
+              {/* Fighter 1 - Dynamic position */}
+              {fighters[0] && fighterPositions[fighters[0].id] && (
+                <div
+                  ref={el => fighterRefs.current[fighters[0].id] = el}
+                  className={`fighter fighter-sprite
+                    ${isAnimating === fighters[0].id ? 'hit-reaction' : ''}
+                    ${attackingFighter === fighters[0].id ? 'attacking' : ''}
+                    ${movingFighters[fighters[0].id] === 'jumping' ? 'jumping' : ''}
+                    ${movingFighters[fighters[0].id] === 'walking' ? 'walking' : ''}
+                    ${fighterDirections[fighters[0].id] === 'left' ? 'facing-left' : 'facing-right'}`}
+                  style={{
+                    left: `${fighterPositions[fighters[0].id].x}px`,
+                    top: `${fighterPositions[fighters[0].id].y}px`,
+                    '--jump-height': movingFighters[fighters[0].id] === 'jumping' ? `${fighterPositions[fighters[0].id].jumpHeight || 60}px` : '0px',
+                  }}
+                >
+                  <div
+                    className="sprite-avatar"
+                    style={{ backgroundColor: fighters[0].logo ? 'transparent' : fighters[0].color }}
+                  >
+                    {fighters[0].logo ? (
+                      <img
+                        src={fighters[0].logo}
+                        alt={fighters[0].name}
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          const parent = e.target.parentElement
+                          if (parent) {
+                            parent.style.backgroundColor = fighters[0].color
+                            if (!parent.textContent || parent.textContent.trim() === '') {
+                              parent.appendChild(document.createTextNode(fighters[0].name.charAt(0).toUpperCase()))
+                            }
+                          }
+                        }}
+                      />
+                    ) : (
+                      fighters[0].name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="sprite-info">
+                    <div className="sprite-class-badge" style={{ backgroundColor: fighters[0].class?.color || 'var(--accent-secondary)' }}>
+                      {fighters[0].class?.icon}
+                    </div>
+                    <div className="sprite-hp-bar">
+                      <div
+                        className="sprite-hp-fill"
+                        style={{
+                          width: `${getHPPercentage(fighters[0].hp, fighters[0].maxHP)}%`,
+                          backgroundColor: getHPColor(getHPPercentage(fighters[0].hp, fighters[0].maxHP))
+                        }}
+                      />
+                    </div>
+                    <div className="sprite-name-tooltip">{fighters[0].name} - {fighters[0].class?.name}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="vs-text">VS</div>
+
+              {/* Fighter 2 - Dynamic position */}
+              {fighters[1] && fighterPositions[fighters[1].id] && (
+                <div
+                  ref={el => fighterRefs.current[fighters[1].id] = el}
+                  className={`fighter fighter-sprite
+                    ${isAnimating === fighters[1].id ? 'hit-reaction' : ''}
+                    ${attackingFighter === fighters[1].id ? 'attacking' : ''}
+                    ${movingFighters[fighters[1].id] === 'jumping' ? 'jumping' : ''}
+                    ${movingFighters[fighters[1].id] === 'walking' ? 'walking' : ''}
+                    ${fighterDirections[fighters[1].id] === 'left' ? 'facing-left' : 'facing-right'}`}
+                  style={{
+                    left: `${fighterPositions[fighters[1].id].x}px`,
+                    top: `${fighterPositions[fighters[1].id].y}px`,
+                    '--jump-height': movingFighters[fighters[1].id] === 'jumping' ? `${fighterPositions[fighters[1].id].jumpHeight || 60}px` : '0px',
+                  }}
+                >
+                  <div
+                    className="sprite-avatar"
+                    style={{ backgroundColor: fighters[1].logo ? 'transparent' : fighters[1].color }}
+                  >
+                    {fighters[1].logo ? (
+                      <img
+                        src={fighters[1].logo}
+                        alt={fighters[1].name}
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          const parent = e.target.parentElement
+                          if (parent) {
+                            parent.style.backgroundColor = fighters[1].color
+                            if (!parent.textContent || parent.textContent.trim() === '') {
+                              parent.appendChild(document.createTextNode(fighters[1].name.charAt(0).toUpperCase()))
+                            }
+                          }
+                        }}
+                      />
+                    ) : (
+                      fighters[1].name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="sprite-info">
+                    <div className="sprite-class-badge" style={{ backgroundColor: fighters[1].class?.color || 'var(--accent-secondary)' }}>
+                      {fighters[1].class?.icon}
+                    </div>
+                    <div className="sprite-hp-bar">
+                      <div
+                        className="sprite-hp-fill"
+                        style={{
+                          width: `${getHPPercentage(fighters[1].hp, fighters[1].maxHP)}%`,
+                          backgroundColor: getHPColor(getHPPercentage(fighters[1].hp, fighters[1].maxHP))
+                        }}
+                      />
+                    </div>
+                    <div className="sprite-name-tooltip">{fighters[1].name} - {fighters[1].class?.name}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
           // Free For All - Multi-level platformer arena
           <div className="battle-stage platformer-arena ffa-platformer">
             {/* Arena background layers */}
@@ -982,181 +1162,28 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
               </div>
             ))}
           </div>
-        ) : (
-          // Tournament mode - Multi-level platformer arena
-          <div className="battle-stage platformer-arena">
-            {/* Arena background layers */}
-            <div className="arena-bg-layer far-bg"></div>
-            <div className="arena-bg-layer mid-bg"></div>
-
-            {/* Render platforms */}
-            {arenaLayout && arenaLayout.platforms.map(platform => (
-              <div
-                key={platform.id}
-                className="arena-platform"
-                style={{
-                  position: 'absolute',
-                  left: `${platform.x}px`,
-                  top: `${platform.y}px`,
-                  width: `${platform.width}px`,
-                  height: `${platform.height}px`,
-                  background: `linear-gradient(180deg, ${platform.color} 0%, var(--bg-dark) 100%)`,
-                  borderTop: platform.id === 'ground' ? '3px solid var(--accent-primary)' : '2px solid var(--border-color)',
-                  boxShadow: platform.id === 'ground' ? '0 -4px 20px rgba(233, 69, 96, 0.3)' : 'none',
-                }}
-              />
-            ))}
-
-            {/* Render obstacles */}
-            {arenaLayout && arenaLayout.obstacles.map(obstacle => (
-              <div
-                key={obstacle.id}
-                className="arena-obstacle"
-                style={{
-                  position: 'absolute',
-                  left: `${obstacle.x}px`,
-                  top: `${obstacle.y}px`,
-                  width: `${obstacle.width}px`,
-                  height: `${obstacle.height}px`,
-                  backgroundColor: obstacle.color,
-                  border: '2px solid var(--border-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
-                }}
-              >
-                {obstacle.icon}
-              </div>
-            ))}
-
-            {/* Fighter 1 - Dynamic position */}
-            {fighters[0] && fighterPositions[fighters[0].id] && (
-              <div
-                ref={el => fighterRefs.current[fighters[0].id] = el}
-                className={`fighter fighter-sprite
-                  ${isAnimating === fighters[0].id ? 'hit-reaction' : ''}
-                  ${attackingFighter === fighters[0].id ? 'attacking' : ''}
-                  ${movingFighters[fighters[0].id] === 'jumping' ? 'jumping' : ''}
-                  ${movingFighters[fighters[0].id] === 'walking' ? 'walking' : ''}
-                  ${fighterDirections[fighters[0].id] === 'left' ? 'facing-left' : 'facing-right'}`}
-                style={{
-                  left: `${fighterPositions[fighters[0].id].x}px`,
-                  top: `${fighterPositions[fighters[0].id].y}px`,
-                  '--jump-height': movingFighters[fighters[0].id] === 'jumping' ? `${fighterPositions[fighters[0].id].jumpHeight || 60}px` : '0px',
-                }}
-              >
-                <div
-                  className="sprite-avatar"
-                  style={{ backgroundColor: fighters[0].logo ? 'transparent' : fighters[0].color }}
-                >
-                  {fighters[0].logo ? (
-                    <img
-                      src={fighters[0].logo}
-                      alt={fighters[0].name}
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        const parent = e.target.parentElement
-                        if (parent) {
-                          parent.style.backgroundColor = fighters[0].color
-                          if (!parent.textContent || parent.textContent.trim() === '') {
-                            parent.appendChild(document.createTextNode(fighters[0].name.charAt(0).toUpperCase()))
-                          }
-                        }
-                      }}
-                    />
-                  ) : (
-                    fighters[0].name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="sprite-info">
-                  <div className="sprite-class-badge" style={{ backgroundColor: fighters[0].class?.color || 'var(--accent-secondary)' }}>
-                    {fighters[0].class?.icon}
-                  </div>
-                  <div className="sprite-hp-bar">
-                    <div
-                      className="sprite-hp-fill"
-                      style={{
-                        width: `${getHPPercentage(fighters[0].hp, fighters[0].maxHP)}%`,
-                        backgroundColor: getHPColor(getHPPercentage(fighters[0].hp, fighters[0].maxHP))
-                      }}
-                    />
-                  </div>
-                  <div className="sprite-name-tooltip">{fighters[0].name} - {fighters[0].class?.name}</div>
-                </div>
-              </div>
-            )}
-
-            <div className="vs-text">VS</div>
-
-            {/* Fighter 2 - Dynamic position */}
-            {fighters[1] && fighterPositions[fighters[1].id] && (
-              <div
-                ref={el => fighterRefs.current[fighters[1].id] = el}
-                className={`fighter fighter-sprite
-                  ${isAnimating === fighters[1].id ? 'hit-reaction' : ''}
-                  ${attackingFighter === fighters[1].id ? 'attacking' : ''}
-                  ${movingFighters[fighters[1].id] === 'jumping' ? 'jumping' : ''}
-                  ${movingFighters[fighters[1].id] === 'walking' ? 'walking' : ''}
-                  ${fighterDirections[fighters[1].id] === 'left' ? 'facing-left' : 'facing-right'}`}
-                style={{
-                  left: `${fighterPositions[fighters[1].id].x}px`,
-                  top: `${fighterPositions[fighters[1].id].y}px`,
-                  '--jump-height': movingFighters[fighters[1].id] === 'jumping' ? `${fighterPositions[fighters[1].id].jumpHeight || 60}px` : '0px',
-                }}
-              >
-                <div
-                  className="sprite-avatar"
-                  style={{ backgroundColor: fighters[1].logo ? 'transparent' : fighters[1].color }}
-                >
-                  {fighters[1].logo ? (
-                    <img
-                      src={fighters[1].logo}
-                      alt={fighters[1].name}
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        const parent = e.target.parentElement
-                        if (parent) {
-                          parent.style.backgroundColor = fighters[1].color
-                          if (!parent.textContent || parent.textContent.trim() === '') {
-                            parent.appendChild(document.createTextNode(fighters[1].name.charAt(0).toUpperCase()))
-                          }
-                        }
-                      }}
-                    />
-                  ) : (
-                    fighters[1].name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="sprite-info">
-                  <div className="sprite-class-badge" style={{ backgroundColor: fighters[1].class?.color || 'var(--accent-secondary)' }}>
-                    {fighters[1].class?.icon}
-                  </div>
-                  <div className="sprite-hp-bar">
-                    <div
-                      className="sprite-hp-fill"
-                      style={{
-                        width: `${getHPPercentage(fighters[1].hp, fighters[1].maxHP)}%`,
-                        backgroundColor: getHPColor(getHPPercentage(fighters[1].hp, fighters[1].maxHP))
-                      }}
-                    />
-                  </div>
-                  <div className="sprite-name-tooltip">{fighters[1].name} - {fighters[1].class?.name}</div>
-                </div>
-              </div>
-            )}
-          </div>
         )}
 
         <div className="battle-log-container pixel-container">
           <h3>Battle Log</h3>
           <div className="battle-log" ref={battleLogRef}>
             {battleLog.map((log) => (
-              <div key={log.id} className="log-entry">
+              <div key={log.id} className={`log-entry log-${log.type}`}>
                 {log.text}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Kill Feed - Top Right */}
+        <div className="kill-feed" ref={killFeedRef}>
+          {killFeed.map((kill) => (
+            <div key={kill.id} className="kill-entry">
+              <span className="kill-attacker">{kill.attacker}</span>
+              <span className="kill-icon">💀</span>
+              <span className="kill-victim">{kill.victim}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

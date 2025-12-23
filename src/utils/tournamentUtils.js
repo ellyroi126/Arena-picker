@@ -47,7 +47,7 @@ export const createTournamentBracket = (contestants) => {
 }
 
 /**
- * Auto-advances bye matches (matches with only one fighter) - ONE ROUND ONLY
+ * Auto-advances bye matches ONLY in rounds where all actual matches are complete
  * This prevents contestants from advancing through multiple byes to the finals instantly
  * @param {Array} bracket - The tournament bracket
  * @returns {Array} - Updated bracket with bye matches advanced
@@ -55,8 +55,24 @@ export const createTournamentBracket = (contestants) => {
 export const processByeMatches = (bracket) => {
   let newBracket = JSON.parse(JSON.stringify(bracket))
 
-  // Only process ONE round of byes to prevent instant advancement to finals
+  // Find the first incomplete round
+  let firstIncompleteRound = -1
   for (let roundIndex = 0; roundIndex < newBracket.length; roundIndex++) {
+    const round = newBracket[roundIndex]
+    const hasUnplayedMatch = round.some(match =>
+      match.fighter1 && match.fighter2 && !match.winner
+    )
+
+    if (hasUnplayedMatch) {
+      firstIncompleteRound = roundIndex
+      break
+    }
+  }
+
+  // Only process byes BEFORE the first incomplete round
+  const maxRoundToProcess = firstIncompleteRound === -1 ? newBracket.length : firstIncompleteRound + 1
+
+  for (let roundIndex = 0; roundIndex < maxRoundToProcess; roundIndex++) {
     const round = newBracket[roundIndex]
     for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
       const match = round[matchIndex]
