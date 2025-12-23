@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './SetupScreen.css'
 import { getBestLogo } from '../utils/logoFetcher'
+import { getPresetCategories, getPresetContestants, getRandomFromPreset } from '../utils/presets'
 import HelpModal from './HelpModal'
 import StatsModal from './StatsModal'
 import Tooltip from './Tooltip'
@@ -11,6 +12,7 @@ function SetupScreen({ onStartBattle, initialContestants = [] }) {
   const [isLoadingLogo, setIsLoadingLogo] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isStatsOpen, setIsStatsOpen] = useState(false)
+  const [showPresets, setShowPresets] = useState(false)
   const [settings, setSettings] = useState({
     battleSpeed: 1500, // Default to Very Slow (rescaled)
     startingHP: 100,
@@ -69,6 +71,33 @@ function SetupScreen({ onStartBattle, initialContestants = [] }) {
     }
   }
 
+  const loadPreset = async (presetId, random = false) => {
+    if (contestants.length >= 16) return
+
+    setIsLoadingLogo(true)
+
+    const names = random
+      ? getRandomFromPreset(presetId, 16 - contestants.length)
+      : getPresetContestants(presetId).slice(0, 16 - contestants.length)
+
+    const newContestants = []
+    for (const name of names) {
+      const logo = await getBestLogo(name)
+      newContestants.push({
+        id: Date.now() + Math.random(),
+        name: name,
+        hp: settings.startingHP,
+        maxHP: settings.startingHP,
+        logo: logo,
+        color: generateRandomColor(),
+      })
+    }
+
+    setContestants([...contestants, ...newContestants])
+    setIsLoadingLogo(false)
+    setShowPresets(false)
+  }
+
   return (
     <div className="setup-screen">
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
@@ -117,6 +146,51 @@ function SetupScreen({ onStartBattle, initialContestants = [] }) {
             {isLoadingLogo ? 'Loading...' : 'Add'}
           </button>
         </form>
+
+        {/* Preset Selection */}
+        <div className="preset-section">
+          <button
+            className="pixel-button preset-toggle-btn"
+            onClick={() => setShowPresets(!showPresets)}
+            disabled={contestants.length >= 16 || isLoadingLogo}
+          >
+            {showPresets ? '✕ Hide Presets' : '⚡ Quick Fill with Presets'}
+          </button>
+
+          {showPresets && (
+            <div className="preset-grid">
+              {getPresetCategories().map((category) => (
+                <div key={category.id} className="preset-card">
+                  <div className="preset-header">
+                    <span className="preset-icon">{category.icon}</span>
+                    <span className="preset-name">{category.name}</span>
+                    <span className="preset-count">({category.count})</span>
+                  </div>
+                  <div className="preset-actions">
+                    <Tooltip content="Add all from this category" position="top">
+                      <button
+                        className="pixel-button preset-btn"
+                        onClick={() => loadPreset(category.id, false)}
+                        disabled={isLoadingLogo}
+                      >
+                        Add All
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Add 8 random from this category" position="top">
+                      <button
+                        className="pixel-button preset-btn"
+                        onClick={() => loadPreset(category.id, true)}
+                        disabled={isLoadingLogo}
+                      >
+                        Random 8
+                      </button>
+                    </Tooltip>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="contestants-list">
           <div className="contestants-header">
