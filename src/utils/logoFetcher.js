@@ -83,18 +83,9 @@ export const fetchLogo = async (name) => {
   const domain = normalizedName.replace(/\s+/g, '') + '.com'
   const clearbitUrl = `https://logo.clearbit.com/${domain}`
 
-  // Test if the logo exists
-  try {
-    const response = await fetch(clearbitUrl, { method: 'HEAD' })
-    if (response.ok) {
-      return clearbitUrl
-    }
-  } catch (error) {
-    // Logo not found, return null
-    console.log(`Logo not found for: ${name}`)
-  }
-
-  return null
+  // Return the URL directly - let the browser handle validation
+  // This avoids CORS issues with fetch
+  return clearbitUrl
 }
 
 /**
@@ -127,16 +118,15 @@ export const generatePlaceholderLogo = (name, style = 'pixel-art') => {
 
 /**
  * Attempts to get the best logo for a contestant
- * Priority: Custom URL > Fetched Logo > Generated Placeholder
+ * Priority: Custom URL > Fetched Logo > Null (falls back to letter avatar)
  * @param {string} name - The contestant name
  * @param {string} customUrl - Optional custom logo URL
  * @returns {Promise<string|null>} - Best available logo URL
  */
 export const getBestLogo = async (name, customUrl = null) => {
-  // If custom URL provided, validate and use it
+  // If custom URL provided, use it directly
   if (customUrl) {
-    const isValid = await isValidImageUrl(customUrl)
-    if (isValid) return customUrl
+    return customUrl
   }
 
   // Try to fetch from known sources
@@ -144,8 +134,5 @@ export const getBestLogo = async (name, customUrl = null) => {
   if (fetchedLogo) return fetchedLogo
 
   // Return null to use color-coded letter avatar instead
-  // You can uncomment this to use generated placeholder:
-  // return generatePlaceholderLogo(name)
-
   return null
 }

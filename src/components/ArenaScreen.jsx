@@ -943,7 +943,15 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                   style={{ backgroundColor: fighter.logo ? 'transparent' : fighter.color }}
                 >
                   {fighter.logo ? (
-                    <img src={fighter.logo} alt={fighter.name} />
+                    <img
+                      src={fighter.logo}
+                      alt={fighter.name}
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.style.backgroundColor = fighter.color
+                        e.target.parentElement.innerHTML = fighter.name.charAt(0).toUpperCase() + (e.target.parentElement.querySelector('.skull-overlay-mini') ? '<div class="skull-overlay-mini">💀</div>' : '')
+                      }}
+                    />
                   ) : (
                     fighter.name.charAt(0).toUpperCase()
                   )}
@@ -1036,7 +1044,15 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                   style={{ backgroundColor: fighters[0].logo ? 'transparent' : fighters[0].color }}
                 >
                   {fighters[0].logo ? (
-                    <img src={fighters[0].logo} alt={fighters[0].name} />
+                    <img
+                      src={fighters[0].logo}
+                      alt={fighters[0].name}
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.style.backgroundColor = fighters[0].color
+                        e.target.parentElement.textContent = fighters[0].name.charAt(0).toUpperCase()
+                      }}
+                    />
                   ) : (
                     fighters[0].name.charAt(0).toUpperCase()
                   )}
@@ -1082,7 +1098,15 @@ function ArenaScreen({ contestants, settings, onBattleEnd }) {
                   style={{ backgroundColor: fighters[1].logo ? 'transparent' : fighters[1].color }}
                 >
                   {fighters[1].logo ? (
-                    <img src={fighters[1].logo} alt={fighters[1].name} />
+                    <img
+                      src={fighters[1].logo}
+                      alt={fighters[1].name}
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.style.backgroundColor = fighters[1].color
+                        e.target.parentElement.textContent = fighters[1].name.charAt(0).toUpperCase()
+                      }}
+                    />
                   ) : (
                     fighters[1].name.charAt(0).toUpperCase()
                   )}
