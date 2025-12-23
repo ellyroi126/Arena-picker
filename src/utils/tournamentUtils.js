@@ -47,31 +47,25 @@ export const createTournamentBracket = (contestants) => {
 }
 
 /**
- * Auto-advances bye matches (matches with only one fighter)
+ * Auto-advances bye matches (matches with only one fighter) - ONE ROUND ONLY
+ * This prevents contestants from advancing through multiple byes to the finals instantly
  * @param {Array} bracket - The tournament bracket
  * @returns {Array} - Updated bracket with bye matches advanced
  */
 export const processByeMatches = (bracket) => {
   let newBracket = JSON.parse(JSON.stringify(bracket))
-  let hasChanges = true
 
-  while (hasChanges) {
-    hasChanges = false
+  // Only process ONE round of byes to prevent instant advancement to finals
+  for (let roundIndex = 0; roundIndex < newBracket.length; roundIndex++) {
+    const round = newBracket[roundIndex]
+    for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+      const match = round[matchIndex]
 
-    for (let roundIndex = 0; roundIndex < newBracket.length; roundIndex++) {
-      const round = newBracket[roundIndex]
-      for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
-        const match = round[matchIndex]
-
-        // Check for bye match (has fighter1 but no fighter2)
-        if (match.fighter1 && !match.fighter2 && !match.winner) {
-          // Auto-advance fighter1
-          newBracket = updateBracketWithWinner(newBracket, roundIndex, matchIndex, match.fighter1)
-          hasChanges = true
-          break
-        }
+      // Check for bye match (has fighter1 but no fighter2)
+      if (match.fighter1 && !match.fighter2 && !match.winner) {
+        // Auto-advance fighter1
+        newBracket = updateBracketWithWinner(newBracket, roundIndex, matchIndex, match.fighter1)
       }
-      if (hasChanges) break
     }
   }
 
